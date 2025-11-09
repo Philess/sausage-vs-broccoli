@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { SpeakerHigh, SpeakerX } from '@phosphor-icons/react'
 
-export function PhonkMusic() {
+export interface PhonkMusicRef {
+  play: () => void
+  stop: () => void
+  isPlaying: boolean
+}
+
+export const PhonkMusic = forwardRef<PhonkMusicRef>((props, ref) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioContextRef = useRef<AudioContext | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
@@ -279,14 +285,27 @@ export function PhonkMusic() {
     }
   }
 
+  const startMusic = () => {
+    audioContextRef.current?.resume()
+    setIsPlaying(true)
+    schedulePhonkLoop()
+  }
+
+  useImperativeHandle(ref, () => ({
+    play: startMusic,
+    stop: () => {
+      stopMusic()
+      setIsPlaying(false)
+    },
+    isPlaying,
+  }))
+
   const toggleMusic = () => {
     if (isPlaying) {
       stopMusic()
       setIsPlaying(false)
     } else {
-      audioContextRef.current?.resume()
-      setIsPlaying(true)
-      schedulePhonkLoop()
+      startMusic()
     }
   }
 
@@ -310,4 +329,4 @@ export function PhonkMusic() {
       )}
     </Button>
   )
-}
+})

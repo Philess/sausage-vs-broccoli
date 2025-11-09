@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
+import { useSoundEffects } from '@/hooks/use-sound-effects'
 import { GameCanvas } from '@/components/GameCanvas'
-import { PhonkMusic } from '@/components/PhonkMusic'
+import { PhonkMusic, PhonkMusicRef } from '@/components/PhonkMusic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,8 @@ function App() {
   const [highScore, setHighScore] = useKV<number>('sausage-highscore', 0)
   const [gameState, setGameState] = useState<GameState>('playing')
   const [score, setScore] = useState(0)
+  const musicRef = useRef<PhonkMusicRef>(null)
+  const { playEnemyDefeatSound, playGameOverSound, playVictorySound } = useSoundEffects()
   const [player, setPlayer] = useState<Player>({
     x: 50,
     y: GAME_HEIGHT - 100,
@@ -100,6 +103,24 @@ function App() {
   const keysPressed = useRef<{ [key: string]: boolean }>({})
   const animationFrameId = useRef<number | undefined>(undefined)
   const lastScoreRef = useRef(score)
+  const hasPlayedGameOverSound = useRef(false)
+  const hasPlayedVictorySound = useRef(false)
+
+  useEffect(() => {
+    musicRef.current?.play()
+  }, [])
+
+  useEffect(() => {
+    if (gameState === 'gameOver' && !hasPlayedGameOverSound.current) {
+      playGameOverSound()
+      hasPlayedGameOverSound.current = true
+      musicRef.current?.stop()
+    } else if (gameState === 'won' && !hasPlayedVictorySound.current) {
+      playVictorySound()
+      hasPlayedVictorySound.current = true
+      musicRef.current?.stop()
+    }
+  }, [gameState, playGameOverSound, playVictorySound])
 
   useEffect(() => {
     if (score > lastScoreRef.current && score > (highScore ?? 0)) {
@@ -174,6 +195,7 @@ function App() {
     })
 
     if (defeatedEnemies.length > 0) {
+      playEnemyDefeatSound()
       setEnemies((prev) => prev.filter((e) => !defeatedEnemies.includes(e.id)))
       setScore((prev) => prev + defeatedEnemies.length * 100)
       setPlayer((prev) => ({ ...prev, velocityY: -10 }))
@@ -182,11 +204,14 @@ function App() {
     if (enemies.length === 0 && gameState === 'playing') {
       setGameState('won')
     }
-  }, [player, enemies, gameState])
+  }, [player, enemies, gameState, playEnemyDefeatSound])
 
   const resetGame = () => {
     setGameState('playing')
     setScore(0)
+    hasPlayedGameOverSound.current = false
+    hasPlayedVictorySound.current = false
+    musicRef.current?.play()
     setPlayer({
       x: 50,
       y: GAME_HEIGHT - 100,
@@ -290,7 +315,7 @@ function App() {
         <Badge variant="default" className="text-lg px-4 py-2 bg-secondary text-secondary-foreground">
           Broccoli Left: {enemies.length}
         </Badge>
-        <PhonkMusic />
+        <PhonkMusic ref={musicRef} />
       </div>
 
       <div className="relative">
