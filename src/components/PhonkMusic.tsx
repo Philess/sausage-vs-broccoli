@@ -115,11 +115,80 @@ export function PhonkMusic() {
     osc.stop(time + duration)
   }
 
+  const playString = (context: AudioContext, time: number, frequency: number, duration: number) => {
+    const osc1 = context.createOscillator()
+    const osc2 = context.createOscillator()
+    const oscGain = context.createGain()
+    const filter = context.createBiquadFilter()
+    
+    osc1.type = 'sawtooth'
+    osc2.type = 'triangle'
+    osc1.frequency.setValueAtTime(frequency, time)
+    osc2.frequency.setValueAtTime(frequency * 2, time)
+    
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(1200, time)
+    filter.Q.value = 3
+    
+    oscGain.gain.setValueAtTime(0.01, time)
+    oscGain.gain.linearRampToValueAtTime(0.12, time + 0.08)
+    oscGain.gain.setValueAtTime(0.12, time + duration - 0.1)
+    oscGain.gain.exponentialRampToValueAtTime(0.01, time + duration)
+    
+    osc1.connect(filter)
+    osc2.connect(filter)
+    filter.connect(oscGain)
+    oscGain.connect(gainNodeRef.current!)
+    
+    osc1.start(time)
+    osc2.start(time)
+    osc1.stop(time + duration)
+    osc2.stop(time + duration)
+  }
+
+  const playBrass = (context: AudioContext, time: number, frequency: number, duration: number) => {
+    const osc = context.createOscillator()
+    const oscGain = context.createGain()
+    const filter = context.createBiquadFilter()
+    
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(frequency, time)
+    
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(1500, time)
+    filter.Q.value = 2
+    
+    oscGain.gain.setValueAtTime(0.01, time)
+    oscGain.gain.linearRampToValueAtTime(0.1, time + 0.05)
+    oscGain.gain.setValueAtTime(0.1, time + duration - 0.1)
+    oscGain.gain.exponentialRampToValueAtTime(0.01, time + duration)
+    
+    osc.connect(filter)
+    filter.connect(oscGain)
+    oscGain.connect(gainNodeRef.current!)
+    
+    osc.start(time)
+    osc.stop(time + duration)
+  }
+
+  const playChord = (context: AudioContext, time: number, baseFreq: number, duration: number) => {
+    const chordFrequencies = [
+      baseFreq,
+      baseFreq * 1.25992,
+      baseFreq * 1.5,
+      baseFreq * 2
+    ]
+    
+    chordFrequencies.forEach((freq) => {
+      playString(context, time, freq, duration)
+    })
+  }
+
   const schedulePhonkLoop = () => {
     const context = audioContextRef.current
     if (!context) return
 
-    const bpm = 140
+    const bpm = 180
     const beatDuration = 60 / bpm
     const barDuration = beatDuration * 4
     
@@ -132,6 +201,14 @@ export function PhonkMusic() {
       { note: 65.41, duration: 0.25 },
       { note: 73.42, duration: 0.5 },
       { note: 55, duration: 0.5 }
+    ]
+
+    const melodyPattern = [
+      220, 246.94, 261.63, 293.66, 329.63, 293.66, 261.63, 246.94
+    ]
+
+    const chordPattern = [
+      110, 110, 130.81, 146.83
     ]
 
     const scheduleBeat = () => {
@@ -157,6 +234,20 @@ export function PhonkMusic() {
       const bassNote = bassPattern[bassIndex]
       if (beat % 2 === 0) {
         playBass(context, currentTime, bassNote.note, bassNote.duration * beatDuration)
+      }
+
+      const melodyIndex = beat % melodyPattern.length
+      if (beat % 2 === 0) {
+        playString(context, currentTime, melodyPattern[melodyIndex], beatDuration * 0.8)
+      }
+
+      const chordIndex = Math.floor(beat / 4) % chordPattern.length
+      if (beat % 4 === 0) {
+        playChord(context, currentTime, chordPattern[chordIndex], beatDuration * 3.8)
+      }
+
+      if (beat % 8 === 4) {
+        playBrass(context, currentTime, melodyPattern[melodyIndex] * 0.5, beatDuration * 2)
       }
 
       currentTime += beatDuration
