@@ -1,23 +1,48 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# 🌭 Sausage vs Broccoli
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+A playful side-scrolling platform game where a brave sausage hero battles against evil broccoli enemies across multiple platforms!
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## 🎮 Play the Game
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+**[Play Sausage vs Broccoli on GitHub Pages](https://philess.github.io/sausage-vs-broccoli/)**
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+## 🚀 Features
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+- **Character Movement**: WASD/Arrow key controls for left/right movement and jumping with physics-based gravity
+- **Enemy Behavior**: Broccoli enemies patrol platforms with simple AI movement patterns
+- **Combat System**: Jump on enemies to defeat them, earn points, and remove threats
+- **Score & Game State**: Track defeated enemies, display score, detect win/loss conditions
+- **Level Progression**: 5 unique levels with varying platform layouts and enemy counts
 
-📄 License For Spark Template Resources 
+## 🛠️ Local Development
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build for production:
+   ```bash
+   npm run build
+   ```
+
+4. Preview production build:
+   ```bash
+   npm run preview
+   ```
+
+## 📦 Deployment
+
+The game is automatically deployed to GitHub Pages when changes are pushed to the main branch. The deployment workflow:
+- Builds the project
+- Uploads the build artifacts
+- Deploys to GitHub Pages
+
+## 📄 License
 
 The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
