@@ -135,8 +135,6 @@ export function PhonkMusic() {
     ]
 
     const scheduleBeat = () => {
-      if (!isPlaying) return
-
       const beat = beatCount % 16
       
       if (beat % 4 === 0 || beat % 4 === 2) {
