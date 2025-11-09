@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { GameCanvas } from '@/components/GameCanvas'
+import { PhonkMusic } from '@/components/PhonkMusic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -272,7 +273,7 @@ function App() {
         <p className="text-muted-foreground text-lg">Jump on the broccoli to defeat them!</p>
       </motion.div>
 
-      <div className="flex gap-4 mb-4 items-center">
+      <div className="flex gap-4 mb-4 items-center flex-wrap justify-center">
         <Badge variant="secondary" className="text-xl px-6 py-2">
           Score: <motion.span
             key={score}
@@ -289,6 +290,7 @@ function App() {
         <Badge variant="default" className="text-lg px-4 py-2 bg-secondary text-secondary-foreground">
           Broccoli Left: {enemies.length}
         </Badge>
+        <PhonkMusic />
       </div>
 
       <div className="relative">
