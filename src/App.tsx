@@ -6,13 +6,12 @@ import { PhonkMusic, PhonkMusicRef } from '@/components/PhonkMusic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Trophy, ArrowsClockwise } from '@phosphor-icons/react'
+import { Trophy, ArrowsClockwise, ArrowRight } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Player, Enemy, GameState } from '@/lib/types'
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
-  PLATFORMS,
   PLAYER_SIZE,
   ENEMY_SIZE,
   updatePlayer,
@@ -20,16 +19,21 @@ import {
   checkEnemyDefeat,
   checkCollision,
 } from '@/lib/gameLogic'
+import { LEVELS } from '@/lib/levels'
 
 function App() {
   const [highScore, setHighScore] = useKV<number>('sausage-highscore', 0)
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0)
   const [gameState, setGameState] = useState<GameState>('playing')
   const [score, setScore] = useState(0)
   const musicRef = useRef<PhonkMusicRef>(null)
   const { playEnemyDefeatSound, playGameOverSound, playVictorySound } = useSoundEffects()
+  
+  const currentLevel = LEVELS[currentLevelIndex]
+  
   const [player, setPlayer] = useState<Player>({
-    x: 50,
-    y: GAME_HEIGHT - 100,
+    x: currentLevel.playerStartX,
+    y: currentLevel.playerStartY,
     width: PLAYER_SIZE,
     height: PLAYER_SIZE,
     velocityX: 0,
@@ -37,68 +41,7 @@ function App() {
     isJumping: false,
     isGrounded: false,
   })
-  const [enemies, setEnemies] = useState<Enemy[]>([
-    {
-      id: '1',
-      x: 150,
-      y: 400,
-      width: ENEMY_SIZE,
-      height: ENEMY_SIZE,
-      velocityX: 0,
-      velocityY: 0,
-      direction: 1,
-      patrolStart: 100,
-      patrolEnd: 220,
-    },
-    {
-      id: '2',
-      x: 400,
-      y: 330,
-      width: ENEMY_SIZE,
-      height: ENEMY_SIZE,
-      velocityX: 0,
-      velocityY: 0,
-      direction: -1,
-      patrolStart: 350,
-      patrolEnd: 520,
-    },
-    {
-      id: '3',
-      x: 630,
-      y: 260,
-      width: ENEMY_SIZE,
-      height: ENEMY_SIZE,
-      velocityX: 0,
-      velocityY: 0,
-      direction: 1,
-      patrolStart: 600,
-      patrolEnd: 720,
-    },
-    {
-      id: '4',
-      x: 280,
-      y: 190,
-      width: ENEMY_SIZE,
-      height: ENEMY_SIZE,
-      velocityX: 0,
-      velocityY: 0,
-      direction: -1,
-      patrolStart: 250,
-      patrolEnd: 400,
-    },
-    {
-      id: '5',
-      x: 540,
-      y: 120,
-      width: ENEMY_SIZE,
-      height: ENEMY_SIZE,
-      velocityX: 0,
-      velocityY: 0,
-      direction: 1,
-      patrolStart: 500,
-      patrolEnd: 620,
-    },
-  ])
+  const [enemies, setEnemies] = useState<Enemy[]>(currentLevel.enemies)
 
   const keysPressed = useRef<{ [key: string]: boolean }>({})
   const animationFrameId = useRef<number | undefined>(undefined)
@@ -160,12 +103,12 @@ function App() {
 
     const gameLoop = () => {
       setPlayer((prevPlayer) => {
-        const updatedPlayer = updatePlayer(prevPlayer, keysPressed.current, PLATFORMS)
+        const updatedPlayer = updatePlayer(prevPlayer, keysPressed.current, currentLevel.platforms)
         return updatedPlayer
       })
 
       setEnemies((prevEnemies) => {
-        const updatedEnemies = prevEnemies.map((enemy) => updateEnemy(enemy, PLATFORMS))
+        const updatedEnemies = prevEnemies.map((enemy) => updateEnemy(enemy, currentLevel.platforms))
         return updatedEnemies
       })
 
@@ -206,15 +149,11 @@ function App() {
     }
   }, [player, enemies, gameState, playEnemyDefeatSound])
 
-  const resetGame = () => {
-    setGameState('playing')
-    setScore(0)
-    hasPlayedGameOverSound.current = false
-    hasPlayedVictorySound.current = false
-    musicRef.current?.play()
+  const loadLevel = (levelIndex: number) => {
+    const level = LEVELS[levelIndex]
     setPlayer({
-      x: 50,
-      y: GAME_HEIGHT - 100,
+      x: level.playerStartX,
+      y: level.playerStartY,
       width: PLAYER_SIZE,
       height: PLAYER_SIZE,
       velocityX: 0,
@@ -222,68 +161,38 @@ function App() {
       isJumping: false,
       isGrounded: false,
     })
-    setEnemies([
-      {
-        id: '1',
-        x: 150,
-        y: 400,
-        width: ENEMY_SIZE,
-        height: ENEMY_SIZE,
-        velocityX: 0,
-        velocityY: 0,
-        direction: 1,
-        patrolStart: 100,
-        patrolEnd: 220,
-      },
-      {
-        id: '2',
-        x: 400,
-        y: 330,
-        width: ENEMY_SIZE,
-        height: ENEMY_SIZE,
-        velocityX: 0,
-        velocityY: 0,
-        direction: -1,
-        patrolStart: 350,
-        patrolEnd: 520,
-      },
-      {
-        id: '3',
-        x: 630,
-        y: 260,
-        width: ENEMY_SIZE,
-        height: ENEMY_SIZE,
-        velocityX: 0,
-        velocityY: 0,
-        direction: 1,
-        patrolStart: 600,
-        patrolEnd: 720,
-      },
-      {
-        id: '4',
-        x: 280,
-        y: 190,
-        width: ENEMY_SIZE,
-        height: ENEMY_SIZE,
-        velocityX: 0,
-        velocityY: 0,
-        direction: -1,
-        patrolStart: 250,
-        patrolEnd: 400,
-      },
-      {
-        id: '5',
-        x: 540,
-        y: 120,
-        width: ENEMY_SIZE,
-        height: ENEMY_SIZE,
-        velocityX: 0,
-        velocityY: 0,
-        direction: 1,
-        patrolStart: 500,
-        patrolEnd: 620,
-      },
-    ])
+    setEnemies(level.enemies)
+    setCurrentLevelIndex(levelIndex)
+  }
+
+  const nextLevel = () => {
+    if (currentLevelIndex < LEVELS.length - 1) {
+      loadLevel(currentLevelIndex + 1)
+      setGameState('playing')
+      hasPlayedGameOverSound.current = false
+      hasPlayedVictorySound.current = false
+      musicRef.current?.play()
+      keysPressed.current = {}
+    }
+  }
+
+  const resetGame = () => {
+    setScore(0)
+    setCurrentLevelIndex(0)
+    loadLevel(0)
+    setGameState('playing')
+    hasPlayedGameOverSound.current = false
+    hasPlayedVictorySound.current = false
+    musicRef.current?.play()
+    keysPressed.current = {}
+  }
+
+  const retryLevel = () => {
+    loadLevel(currentLevelIndex)
+    setGameState('playing')
+    hasPlayedGameOverSound.current = false
+    hasPlayedVictorySound.current = false
+    musicRef.current?.play()
     keysPressed.current = {}
   }
 
@@ -312,6 +221,9 @@ function App() {
         <Badge variant="outline" className="text-lg px-4 py-2">
           High Score: {highScore ?? 0}
         </Badge>
+        <Badge variant="default" className="text-lg px-4 py-2 bg-accent text-accent-foreground">
+          Level {currentLevel.number}: {currentLevel.name}
+        </Badge>
         <Badge variant="default" className="text-lg px-4 py-2 bg-secondary text-secondary-foreground">
           Broccoli Left: {enemies.length}
         </Badge>
@@ -319,7 +231,7 @@ function App() {
       </div>
 
       <div className="relative">
-        <GameCanvas player={player} enemies={enemies} platforms={PLATFORMS} />
+        <GameCanvas player={player} enemies={enemies} platforms={currentLevel.platforms} />
 
         <AnimatePresence>
           {gameState === 'gameOver' && (
@@ -333,19 +245,29 @@ function App() {
                 <CardHeader className="text-center">
                   <CardTitle className="text-3xl text-destructive">Game Over!</CardTitle>
                   <CardDescription className="text-lg">
-                    The broccoli got you!
+                    The broccoli got you on Level {currentLevel.number}!
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
-                  <p className="text-2xl font-semibold">Final Score: {score}</p>
-                  <Button
-                    size="lg"
-                    onClick={resetGame}
-                    className="gap-2 hover:scale-105 transition-transform"
-                  >
-                    <ArrowsClockwise size={20} weight="bold" />
-                    Try Again
-                  </Button>
+                  <p className="text-2xl font-semibold">Score: {score}</p>
+                  <div className="flex gap-3">
+                    <Button
+                      size="lg"
+                      onClick={retryLevel}
+                      className="gap-2 hover:scale-105 transition-transform"
+                    >
+                      <ArrowsClockwise size={20} weight="bold" />
+                      Retry Level
+                    </Button>
+                    <Button
+                      size="lg"
+                      onClick={resetGame}
+                      variant="outline"
+                      className="gap-2 hover:scale-105 transition-transform"
+                    >
+                      Start Over
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -363,21 +285,49 @@ function App() {
                   <div className="flex justify-center mb-4">
                     <Trophy size={64} weight="fill" className="text-accent" />
                   </div>
-                  <CardTitle className="text-3xl text-accent-foreground">Victory!</CardTitle>
+                  <CardTitle className="text-3xl text-accent-foreground">
+                    {currentLevelIndex === LEVELS.length - 1 ? 'All Levels Complete!' : 'Level Complete!'}
+                  </CardTitle>
                   <CardDescription className="text-lg">
-                    You defeated all the broccoli!
+                    {currentLevelIndex === LEVELS.length - 1 
+                      ? 'You defeated all the broccoli in every level!' 
+                      : `You cleared ${currentLevel.name}!`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
-                  <p className="text-2xl font-semibold">Final Score: {score}</p>
-                  <Button
-                    size="lg"
-                    onClick={resetGame}
-                    className="gap-2 hover:scale-105 transition-transform bg-accent text-accent-foreground hover:bg-accent/90"
-                  >
-                    <ArrowsClockwise size={20} weight="bold" />
-                    Play Again
-                  </Button>
+                  <p className="text-2xl font-semibold">Score: {score}</p>
+                  <div className="flex gap-3">
+                    {currentLevelIndex < LEVELS.length - 1 ? (
+                      <>
+                        <Button
+                          size="lg"
+                          onClick={nextLevel}
+                          className="gap-2 hover:scale-105 transition-transform bg-accent text-accent-foreground hover:bg-accent/90"
+                        >
+                          Next Level
+                          <ArrowRight size={20} weight="bold" />
+                        </Button>
+                        <Button
+                          size="lg"
+                          onClick={resetGame}
+                          variant="outline"
+                          className="gap-2 hover:scale-105 transition-transform"
+                        >
+                          <ArrowsClockwise size={20} weight="bold" />
+                          Start Over
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="lg"
+                        onClick={resetGame}
+                        className="gap-2 hover:scale-105 transition-transform bg-accent text-accent-foreground hover:bg-accent/90"
+                      >
+                        <ArrowsClockwise size={20} weight="bold" />
+                        Play Again
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
